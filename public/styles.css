@@ -1,0 +1,275 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f5f5f5;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.container {
+  display: flex;
+  height: 100vh;
+  gap: 10px;
+  padding: 10px;
+}
+
+.map-container {
+  flex: 1;
+  position: relative;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+}
+
+.controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: white;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  width: 280px;
+  max-height: 90%;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.controls h2 {
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 16px;
+}
+
+.control-section {
+  margin-bottom: 15px;
+}
+
+.control-section label {
+  display: block;
+  margin-bottom: 5px;
+  color: #666;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.control-section input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.control-section button {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 5px;
+  border: none;
+  border-radius: 4px;
+  background: #007bff;
+  color: white;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+
+.control-section button:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.control-section button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+#startBtn {
+  background: #28a745;
+}
+
+#startBtn:hover:not(:disabled) {
+  background: #218838;
+}
+
+#stopBtn {
+  background: #dc3545;
+}
+
+#stopBtn:hover:not(:disabled) {
+  background: #c82333;
+}
+
+#clearBtn {
+  background: #6c757d;
+}
+
+#clearBtn:hover {
+  background: #5a6268;
+}
+
+#instructions {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 10px;
+  margin-top: 15px;
+  font-size: 12px;
+  color: #666;
+}
+
+#instructions p {
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+#instructions ol {
+  margin-left: 20px;
+  line-height: 1.6;
+}
+
+.telemetry-container {
+  width: 350px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.telemetry-panel {
+  padding: 15px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.telemetry-panel h2 {
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 16px;
+}
+
+.telemetry-group {
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.telemetry-group:last-child {
+  border-bottom: none;
+}
+
+.telemetry-group h3 {
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.telemetry-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.telemetry-item .label {
+  color: #666;
+  font-weight: 600;
+}
+
+.telemetry-item .value {
+  color: #007bff;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+}
+
+/* Leaflet Draw customization */
+.leaflet-draw-toolbar {
+  background: white;
+  border-radius: 8px;
+}
+
+.leaflet-draw-toolbar a {
+  background-color: white;
+  border: 1px solid #ddd;
+  color: #666;
+}
+
+.leaflet-draw-toolbar a:hover {
+  background-color: #f0f0f0;
+}
+
+/* Flight path styling */
+.flight-path {
+  stroke: #007bff;
+  stroke-width: 2;
+  fill: none;
+  opacity: 0.7;
+}
+
+.flight-area {
+  stroke: #28a745;
+  stroke-width: 2;
+  fill: rgba(40, 167, 69, 0.1);
+}
+
+.aircraft-marker {
+  width: 20px;
+  height: 20px;
+  background: #dc3545;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 0 8px rgba(0,0,0,0.3);
+}
+
+/* Scrollbar styling */
+.controls::-webkit-scrollbar,
+.telemetry-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.controls::-webkit-scrollbar-track,
+.telemetry-panel::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.controls::-webkit-scrollbar-thumb,
+.telemetry-panel::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.controls::-webkit-scrollbar-thumb:hover,
+.telemetry-panel::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+  .container {
+    flex-direction: column;
+  }
+  
+  .map-container {
+    flex: 0 0 50%;
+  }
+  
+  .telemetry-container {
+    width: 100%;
+    flex: 1;
+  }
+}
