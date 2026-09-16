@@ -12,6 +12,55 @@
   <div class="container">
     <div class="map-container">
       <div id="map"></div>
+      
+      <!-- Drawing Toolbar -->
+      <div class="drawing-toolbar">
+        <div class="toolbar-section">
+          <h3>Flight Zone</h3>
+          <button id="drawPolygonBtn" class="tool-btn active" title="Draw Flight Area (Polygon)">
+            <span class="icon">◻️</span> Polygon
+          </button>
+          <button id="drawRectBtn" class="tool-btn" title="Draw Flight Area (Rectangle)">
+            <span class="icon">▭</span> Rectangle
+          </button>
+          <button id="drawCircleBtn" class="tool-btn" title="Draw Flight Area (Circle)">
+            <span class="icon">●</span> Circle
+          </button>
+        </div>
+        
+        <div class="toolbar-section">
+          <h3>No-Fly Zones</h3>
+          <button id="excludePolygonBtn" class="tool-btn exclude" title="Draw No-Fly Zone (Polygon)">
+            <span class="icon">◻️</span> Exclude
+          </button>
+          <button id="excludeCircleBtn" class="tool-btn exclude" title="Draw No-Fly Zone (Circle)">
+            <span class="icon">●</span> Exclude
+          </button>
+        </div>
+        
+        <div class="toolbar-section">
+          <h3>Edit</h3>
+          <button id="editBtn" class="tool-btn" title="Edit Zones">
+            <span class="icon">✎</span> Edit
+          </button>
+          <button id="deleteBtn" class="tool-btn" title="Delete Selected">
+            <span class="icon">✕</span> Delete
+          </button>
+          <button id="clearAllBtn" class="tool-btn" title="Clear All Zones">
+            <span class="icon">🗑️</span> Clear All
+          </button>
+        </div>
+      </div>
+      
+      <!-- Zone Info Panel -->
+      <div class="zone-info-panel">
+        <h3>Zones</h3>
+        <div id="zonesList" class="zones-list">
+          <p class="empty-state">No zones defined</p>
+        </div>
+      </div>
+      
+      <!-- Flight Controls -->
       <div class="controls">
         <h2>Flight Simulator</h2>
         
@@ -28,15 +77,16 @@
         <div class="control-section">
           <button id="startBtn" onclick="startSimulation()" disabled>Start Flight</button>
           <button id="stopBtn" onclick="stopSimulation()" disabled>Stop Flight</button>
-          <button id="clearBtn" onclick="clearPath()">Clear Path</button>
+          <button id="clearPathBtn" onclick="clearPath()">Clear Path</button>
         </div>
         
         <div id="instructions">
           <p><strong>Instructions:</strong></p>
           <ol>
-            <li>Draw a polygon on the map to define flight area</li>
+            <li>Draw a flight area using toolbar</li>
+            <li>Add exclusion zones if needed</li>
             <li>Set altitude and speed</li>
-            <li>Click "Start Flight" to begin simulation</li>
+            <li>Click "Start Flight"</li>
           </ol>
         </div>
       </div>
