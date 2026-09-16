@@ -98,10 +98,19 @@ function initWebSocket() {
   };
   
   ws.onmessage = (event) => {
-    const message = JSON.parse(event.data);
-    
-    if (message.type === 'STATE') {
-      updateTelemetry(message.data);
+    try {
+      const message = JSON.parse(event.data);
+      
+      // Handle both wrapped format (with type field) and raw Stratux format
+      if (message.type === 'STATE') {
+        // Wrapped format: {type: "STATE", data: {...}}
+        updateTelemetry(message.data);
+      } else if (message.GPSLatitude !== undefined) {
+        // Raw Stratux format: send directly
+        updateTelemetry(message);
+      }
+    } catch (err) {
+      console.error('Error parsing WebSocket message:', err);
     }
   };
   
@@ -176,12 +185,19 @@ function clearPath() {
 
 function updateTelemetry(state) {
   // Position
-  document.getElementById('lat').textContent = state.GPSLatitude.toFixed(6);
-  document.getElementById('lon').textContent = state.GPSLongitude.toFixed(6);
-  document.getElementById('alt').textContent = Math.round(state.GPSGeometricAltitude).toLocaleString();
+  if (state.GPSLatitude !== undefined) {
+    document.getElementById('lat').textContent = state.GPSLatitude.toFixed(6);
+  }
+  if (state.GPSLongitude !== undefined) {
+    document.getElementById('lon').textContent = state.GPSLongitude.toFixed(6);
+  }
+  
+  // Altitude - use GPSAltitudeMSL or GPSHeightAboveEllipsoid
+  const altitude = state.GPSAltitudeMSL || state.GPSHeightAboveEllipsoid || state.GPSGeometricAltitude || 0;
+  document.getElementById('alt').textContent = Math.round(altitude).toLocaleString();
   
   // Navigation
-  document.getElementById('heading').textContent = Math.round(state.GPSTrueCourse || 0);
+  document.getElementById('heading').textContent = Math.round(state.AHRSGyroHeading || state.GPSTrueCourse || 0);
   document.getElementById('speed-display').textContent = Math.round(state.GPSGroundSpeed || 0);
   document.getElementById('vspeed').textContent = Math.round((state.BaroVerticalSpeed || 0) * 100) / 100;
   
@@ -195,38 +211,27 @@ function updateTelemetry(state) {
   document.getElementById('elapsed').textContent = formatTime(state.SimulationElapsedSeconds || 0);
   
   // Update aircraft marker
-  if (aircraftMarker) {
-    map.removeLayer(aircraftMarker);
-  }
-  
-  aircraftMarker = L.marker(
-    [state.GPSLatitude, state.GPSLongitude],
-    {
-      icon: L.icon({
-        iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIgZmlsbD0iI2RjMzU0NSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+',
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
-      }),
-      title: `Aircraft - Alt: ${Math.round(state.GPSGeometricAltitude)} ft`
+  if (state.GPSLatitude !== undefined && state.GPSLongitude !== undefined) {
+    if (aircraftMarker) {
+      map.removeLayer(aircraftMarker);
     }
-  ).addTo(map);
-  
-  // Update flight path
-  if (isSimulating && state.flightPath && state.flightPath.length > 0) {
-    const latLngs = state.flightPath.map(point => [point.lat, point.lon]);
     
-    if (flightPathPolyline) {
-      flightPathPolyline.setLatLngs(latLngs);
-    } else {
-      flightPathPolyline = L.polyline(latLngs, {
-        color: '#007bff',
-        weight: 2,
-        opacity: 0.7
-      }).addTo(map);
-    }
+    aircraftMarker = L.marker(
+      [state.GPSLatitude, state.GPSLongitude],
+      {
+        icon: L.icon({
+          iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIgZmlsbD0iI2RjMzU0NSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
+        }),
+        title: `Aircraft - Alt: ${Math.round(altitude)} ft`
+      }
+    ).addTo(map);
     
     // Pan map to aircraft
-    map.panTo([state.GPSLatitude, state.GPSLongitude]);
+    if (isSimulating) {
+      map.panTo([state.GPSLatitude, state.GPSLongitude]);
+    }
   }
   
   // Update simulation status
