@@ -23,17 +23,21 @@ const flightState = {
   AHRSPitch: 0,
   AHRSRoll: 0,
   AHRSGyroHeading: 90,
+  AHRSMagHeading: 90,
   GPSLatitude: 25.7953,
   GPSLongitude: -80.28294911654234,
   GPSTrueCourse: 90,
   GPSGroundSpeed: 45,
   GPSGeometricAltitude: 3000,
+  GPSHeightAboveEllipsoid: 3000,
+  GPSAltitudeMSL: 3000,
   BaroVerticalSpeed: 0,
+  AHRSSlipSkid: 0,
+  GPSFixQuality: 4,
   SimulationPhase: 'LEG',
   SimulationComplete: false,
   SimulationElapsedSeconds: 0,
   isSimulating: false,
-  flightPath: [],
   selectedArea: null
 };
 
@@ -44,11 +48,10 @@ let startTime = null;
 wss.on('connection', (ws) => {
   console.log('Client connected. Total clients:', wss.clients.size);
   
-  // Send initial state
-  ws.send(JSON.stringify({
-    type: 'STATE',
-    data: flightState
-  }));
+  // Send initial state in Stratux format
+  const initialState = { ...flightState };
+  
+  ws.send(JSON.stringify(initialState));
   
   ws.on('message', (message) => {
     try {
@@ -84,10 +87,8 @@ function handleClientMessage(message, ws) {
       updateFlightTarget(message.data);
       break;
     case 'REQUEST_STATE':
-      ws.send(JSON.stringify({
-        type: 'STATE',
-        data: flightState
-      }));
+      const stateToSend = { ...flightState };
+      ws.send(JSON.stringify(stateToSend));
       break;
   }
 }
@@ -100,10 +101,10 @@ function startSimulation(params) {
   flightState.SimulationPhase = 'LEG';
   flightState.SimulationComplete = false;
   flightState.SimulationElapsedSeconds = 0;
-  flightState.flightPath = [];
+  flightState.GPSFixQuality = 4;
   startTime = Date.now();
   
-  // Simulation loop - 30 Hz
+  // Simulation loop - 30 Hz (matches Stratux 100ms but we do 33ms)
   simulationInterval = setInterval(() => {
     updateFlightState(params);
     broadcastState();
@@ -118,6 +119,7 @@ function stopSimulation() {
   flightState.isSimulating = false;
   flightState.SimulationPhase = 'COMPLETE';
   flightState.SimulationComplete = true;
+  flightState.GPSFixQuality = 0;
   broadcastState();
 }
 
@@ -153,26 +155,23 @@ function updateFlightState(params) {
   flightState.GPSLatitude = position.lat;
   flightState.GPSLongitude = position.lon;
   flightState.GPSGeometricAltitude = cruiseAltitude || 3000;
+  flightState.GPSHeightAboveEllipsoid = cruiseAltitude || 3000;
+  flightState.GPSAltitudeMSL = cruiseAltitude || 3000;
   flightState.GPSGroundSpeed = speed || 45;
   flightState.GPSTrueCourse = position.heading;
-  
-  // Add to flight path
-  flightState.flightPath.push({
-    lat: position.lat,
-    lon: position.lon,
-    alt: flightState.GPSGeometricAltitude,
-    time: flightState.SimulationElapsedSeconds
-  });
-  
-  // Keep only last 1000 points for memory efficiency
-  if (flightState.flightPath.length > 1000) {
-    flightState.flightPath.shift();
-  }
+  flightState.AHRSGyroHeading = position.heading;
+  flightState.AHRSMagHeading = position.heading;
+  flightState.BaroVerticalSpeed = 0;
   
   // Simulate pitch/roll based on heading changes
-  flightState.AHRSHeading = position.heading;
   flightState.AHRSRoll = Math.sin(position.heading * Math.PI / 180) * 5;
   flightState.AHRSPitch = 0;
+  
+  // Slip/skid defaults to 0 (straight and level flight)
+  flightState.AHRSSlipSkid = 0;
+  
+  // GPS Fix Quality: 4 = GPS fix
+  flightState.GPSFixQuality = 4;
 }
 
 function calculateTotalDistance(waypoints) {
@@ -258,16 +257,23 @@ function calculateBearing(lat1, lon1, lat2, lon2) {
 
 function updateFlightTarget(data) {
   // Handle target updates from client
-  if (data.altitude) flightState.GPSGeometricAltitude = data.altitude;
-  if (data.heading) flightState.AHRSGyroHeading = data.heading;
+  if (data.altitude) {
+    flightState.GPSGeometricAltitude = data.altitude;
+    flightState.GPSHeightAboveEllipsoid = data.altitude;
+    flightState.GPSAltitudeMSL = data.altitude;
+  }
+  if (data.heading) {
+    flightState.AHRSGyroHeading = data.heading;
+    flightState.AHRSMagHeading = data.heading;
+  }
   broadcastState();
 }
 
 function broadcastState() {
-  const message = JSON.stringify({
-    type: 'STATE',
-    data: flightState
-  });
+  // Send state in Stratux-compatible format
+  const stateToSend = { ...flightState };
+  
+  const message = JSON.stringify(stateToSend);
   
   wss.clients.forEach((client) => {
     if (client.readyState === 1) { // 1 = OPEN
@@ -303,5 +309,5 @@ app.get('/health', (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`Flight Simulator Server running on http://localhost:${PORT}`);
-  console.log(`WebSocket server ready for connections`);
+  console.log(`WebSocket server ready for Stratux-compatible connections`);
 });
